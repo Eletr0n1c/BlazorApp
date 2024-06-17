@@ -1,0 +1,100 @@
+﻿@using BlazorApp.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">BlazorApp</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+
+        @if (isAuthenticated)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="criar-tarefa">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Criar Tarefas
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="consultar-tarefas">
+                    <span class="bi bi-plus-square-fill-nav-menu"></span> Consultar Tarefas
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <a class="nav-link" @onclick="Logout">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Sair do Sistema
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Autenticar Usuário
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="criar-usuario">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Criar Usuário
+                </NavLink>
+            </div>
+        }
+
+    </nav>
+</div>
+
+@code {
+
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    //atributos
+    private bool isAuthenticated = false;
+
+    /// <summary>
+    /// Método executado sempre que o componente é renderizado / exibido
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        //capturar os dados do usuário autenticado
+        var usuario = await Auth.GetData();
+
+        //verificar se existe um usuário autenticado
+        if (usuario != null)
+            isAuthenticated = true;
+        else
+            isAuthenticated = false;
+    }
+
+    /// <summary>
+    /// Método para deslogar o usuário da aplicação
+    /// </summary>
+    private async Task Logout()
+    {
+        //exibindo uma janela popup do navegador
+        var confirmed = await JSRuntime.InvokeAsync<bool>
+                        ("confirm", "Deseja realmente sair do sistema?");
+
+        //verificando se o usuário deu OK na popup de confirmação
+        if (confirmed)
+        {
+            await Auth.SignOut(); //apagar os dados da local storage
+                                  //navegar de volta para a página inicial do sistema
+            Navigation.NavigateTo("/", true);
+        }
+    }
+}

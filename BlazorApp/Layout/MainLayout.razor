@@ -1,0 +1,52 @@
+﻿@using BlazorApp.Services
+
+@inherits LayoutComponentBase
+
+@inject AuthService Auth
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+
+            @if (!string.IsNullOrEmpty(nome) && !string.IsNullOrEmpty(email))
+            {
+                <div>
+                    Usuário autenticado: <strong>@nome | @email</strong>
+                </div>
+            }
+
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+
+    //atributos
+    private string? nome;
+    private string? email;
+
+    /// <summary>
+    /// Método executado no momento em que o componente é aberto
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        //capturar os dados do usuário autenticado
+        var usuario = await Auth.GetData();
+
+        //verificar se o usuário está autenticado
+        if (usuario != null)
+        {
+            //capturando nome e email do usuário
+            nome = usuario.Nome;
+            email = usuario.Email;
+        }
+    }
+}
